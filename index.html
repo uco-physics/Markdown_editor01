@@ -4,149 +4,101 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown Editor</title>
-  <!-- CDNライブラリ -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+  <!-- CDN依存 -->
   <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.7/dist/dexie.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.18/dist/y.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/y-webrtc@10.2.6/dist/y-webrtc.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/languages/markdown.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.13/dist/modules/libsodium-wrappers.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/vs2015.min.css">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="data:application/manifest+json,{
+    \"name\": \"Markdown Editor\",
+    \"short_name\": \"MDEditor\",
+    \"start_url\": \".\",
+    \"display\": \"standalone\",
+    \"background_color\": \"#1e1e1e\",
+    \"theme_color\": \"#007acc\",
+    \"icons\": [
+      {\"src\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRFAAAA////I4ozXgAAABhJREFUeNpiYGBgYGBhZmBgYGRgZGBgYAAAAPAABmWj9N4AAAAASUVORK5CYII=\", \"sizes\": \"32x32\", \"type\": \"image/png\"}
+    ]
+  }">
   <style>
-    /* レイアウト: VSCodeライクな3カラム */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #sidebar {
-      width: 200px;
-      background: #f0f0f0;
-      overflow-y: auto;
-      padding: 10px;
-    }
-    #editor {
-      flex: 1;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-    }
-    #editor textarea {
-      flex: 1;
-      resize: none;
-      font-family: monospace;
-      font-size: 14px;
-    }
-    #preview {
-      width: 300px;
-      background: #fff;
-      overflow-y: auto;
-      padding: 10px;
-      border-left: 1px solid #ccc;
-    }
-    #directory {
-      list-style: none;
-      padding: 0;
-    }
-    #directory li {
-      cursor: pointer;
-      padding: 5px;
-    }
-    #directory li:hover {
-      background: #ddd;
-    }
-    .folder > ul {
-      display: none;
-    }
-    .folder.open > ul {
-      display: block;
-    }
-    .toolbar {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 5px;
-    }
-    button {
-      padding: 5px 10px;
-    }
-    /* テーマ */
-    .dark {
-      background: #1e1e1e;
-      color: #fff;
-    }
-    .dark #sidebar {
-      background: #252526;
-    }
-    .dark #editor textarea {
-      background: #1e1e1e;
-      color: #fff;
-    }
-    .dark #preview {
-      background: #252526;
-      color: #fff;
+    /* モダンなVSCode風デザイン */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1e1e1e; color: #d4d4d4; }
+    #app { display: grid; grid-template-columns: 250px 1fr 1fr; height: 100vh; }
+    #sidebar { background: #252526; padding: 10px; overflow-y: auto; }
+    #editor { background: #1e1e1e; border: none; padding: 15px; font-size: 14px; color: #d4d4d4; resize: none; }
+    #preview { background: #ffffff; color: #333; padding: 15px; overflow-y: auto; }
+    .tree { list-style: none; padding-left: 15px; }
+    .tree li { cursor: pointer; padding: 5px 0; }
+    .tree li:hover { background: #333; }
+    .resizer { width: 5px; background: #007acc; cursor: col-resize; }
+    .resizer:hover { background: #00aaff; }
+    .toolbar { background: #252526; padding: 5px; display: flex; gap: 5px; }
+    .toolbar button { background: #007acc; color: #fff; border: none; padding: 5px 10px; cursor: pointer; }
+    .toolbar button:hover { background: #00aaff; }
+    .theme-toggle { position: fixed; top: 10px; right: 10px; }
+    /* ライトテーマ */
+    body.light { background: #ffffff; color: #333; }
+    body.light #sidebar { background: #f3f3f3; }
+    body.light #editor { background: #ffffff; color: #333; }
+    body.light .toolbar { background: #f3f3f3; }
+    body.light .tree li:hover { background: #e0e0e0; }
+    /* モバイル対応 */
+    @media (max-width: 768px) {
+      #app { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+      #sidebar, #editor, #preview { height: 33vh; }
+      .resizer { display: none; }
     }
   </style>
 </head>
 <body>
-  <!-- 左: 擬似ディレクトリ -->
-  <div id="sidebar">
-    <div class="toolbar">
-      <button onclick="createFile()">New File</button>
-      <button onclick="createFolder()">New Folder</button>
-      <button onclick="uploadFile()">Upload File</button>
+  <!-- UIレイアウト -->
+  <div id="app">
+    <div id="sidebar">
+      <div class="toolbar">
+        <button onclick="createFile()">New File</button>
+        <button onclick="createFolder()">New Folder</button>
+        <button onclick="uploadImage()">Upload Image</button>
+      </div>
+      <ul id="tree" class="tree"></ul>
     </div>
-    <ul id="directory"></ul>
-  </div>
-  <!-- 中央: エディタ -->
-  <div id="editor">
-    <div class="toolbar">
-      <button onclick="saveFile()">Save</button>
-      <button onclick="undo()">Undo</button>
-      <button onclick="redo()">Redo</button>
-      <button onclick="commitVersion()">Commit</button>
-      <button onclick="showHistory()">History</button>
-      <button onclick="searchReplace()">Search/Replace</button>
-      <button onclick="toggleTheme()">Toggle Theme</button>
-      <button onclick="exportZip()">Export ZIP</button>
-      <button onclick="exportHtml()">Export HTML</button>
-      <button onclick="exportPdf()">Export PDF</button>
-      <button onclick="startCollab()">Start Collab</button>
+    <div class="resizer" id="sidebar-resizer"></div>
+    <div id="editor-container">
+      <div class="toolbar">
+        <button onclick="undo()">Undo</button>
+        <button onclick="redo()">Redo</button>
+        <button onclick="save()">Save</button>
+        <button onclick="exportFolder()">Export Folder</button>
+        <button onclick="exportHtml()">Export HTML</button>
+        <button onclick="exportSource()">Export Source</button>
+      </div>
+      <textarea id="editor"></textarea>
     </div>
-    <textarea id="editor-text"></textarea>
+    <div class="resizer" id="editor-resizer"></div>
+    <div id="preview"></div>
   </div>
-  <!-- 右: プレビュー -->
-  <div id="preview"></div>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
 
   <script>
     // 初期化
-    const db = new Dexie('MarkdownEditorDB');
+    const db = new Dexie('MarkdownEditor');
     db.version(1).stores({
-      files: 'id, path, content, type, parentId',
-      versions: 'id, fileId, content, timestamp, message',
-      settings: 'key, value',
+      files: 'path, content, type, created, updated',
+      versions: 'id, path, content, timestamp',
+      settings: 'key, value'
     });
-    const ydoc = new Y.Doc();
-    const ytext = ydoc.getText('editor');
-    let currentFileId = null;
-    let undoManager = null;
-    let peer = null;
-    let encryptionKey = null;
+    let currentPath = null;
+    let undoStack = [];
+    let redoStack = [];
+    let autoSaveTimeout = null;
 
-    // ライブラリ初期化
-    hljs.registerLanguage('javascript', window.hljsDefineJavaScript);
-    mermaid.initialize({ startOnLoad: false });
-
-    // 暗号化初期化
+    // 暗号化準備
+    let encryptionKey;
     async function initCrypto() {
       await sodium.ready;
       encryptionKey = sodium.crypto_secretbox_keygen();
@@ -154,289 +106,252 @@
     initCrypto();
 
     // ディレクトリ操作
-    async function renderDirectory() {
+    async function loadTree() {
       const files = await db.files.toArray();
-      const directory = document.getElementById('directory');
-      directory.innerHTML = '';
-      const tree = buildTree(files, null);
-      directory.appendChild(renderTree(tree));
+      const tree = {};
+      files.forEach(file => {
+        const parts = file.path.split('/');
+        let current = tree;
+        parts.forEach((part, i) => {
+          if (!current[part]) current[part] = i === parts.length - 1 ? file : {};
+          current = current[part];
+        });
+      });
+      renderTree(tree, document.getElementById('tree'));
     }
 
-    function buildTree(files, parentId) {
-      return files
-        .filter(f => f.parentId === parentId)
-        .map(f => ({
-          ...f,
-          children: f.type === 'folder' ? buildTree(files, f.id) : [],
-        }));
-    }
-
-    function renderTree(nodes) {
-      const ul = document.createElement('ul');
-      nodes.forEach(node => {
+    function renderTree(tree, ul, prefix = '') {
+      ul.innerHTML = '';
+      Object.keys(tree).sort().forEach(key => {
         const li = document.createElement('li');
-        li.textContent = node.path.split('/').pop();
-        li.draggable = true;
-        li.dataset.id = node.id;
-        if (node.type === 'folder') {
-          li.classList.add('folder');
-          li.addEventListener('click', () => li.classList.toggle('open'));
-          li.appendChild(renderTree(node.children));
+        const item = tree[key];
+        li.textContent = key;
+        if (item.type === 'file') {
+          li.onclick = () => openFile(prefix + key);
         } else {
-          li.addEventListener('click', () => openFile(node.id));
+          li.textContent += '/';
+          li.onclick = () => li.querySelector('ul')?.classList.toggle('hidden');
+          const subUl = document.createElement('ul');
+          subUl.className = 'tree hidden';
+          renderTree(item, subUl, prefix + key + '/');
+          li.appendChild(subUl);
         }
-        li.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', node.id));
-        li.addEventListener('drop', e => handleDrop(e, node.id));
-        li.addEventListener('dragover', e => e.preventDefault());
         ul.appendChild(li);
       });
-      return ul;
     }
 
     async function createFile() {
-      const path = prompt('File name:');
+      const path = prompt('File path (e.g., /docs/note.md):');
       if (path) {
-        const id = Date.now().toString();
-        await db.files.put({ id, path: `/root/${path}`, content: '', type: 'file', parentId: null });
-        renderDirectory();
+        await db.files.put({ path, content: '', type: 'file', created: Date.now(), updated: Date.now() });
+        loadTree();
       }
     }
 
     async function createFolder() {
-      const path = prompt('Folder name:');
+      const path = prompt('Folder path (e.g., /docs/):');
       if (path) {
-        const id = Date.now().toString();
-        await db.files.put({ id, path: `/root/${path}`, content: '', type: 'folder', parentId: null });
-        renderDirectory();
+        await db.files.put({ path, content: '', type: 'folder', created: Date.now(), updated: Date.now() });
+        loadTree();
       }
     }
 
-    async function uploadFile() {
+    async function uploadImage() {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*,.md';
-      input.onchange = async e => {
-        const file = e.target.files[0];
-        const id = Date.now().toString();
+      input.accept = 'image/*';
+      input.onchange = async () => {
+        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async () => {
-          const content = file.type.startsWith('image/') ? reader.result : await file.text();
-          await db.files.put({
-            id,
-            path: `/root/${file.name}`,
-            content,
-            type: file.type.startsWith('image/') ? 'image' : 'file',
-            parentId: null,
-          });
-          renderDirectory();
+          const base64 = reader.result;
+          const path = `/images/${file.name}`;
+          await db.files.put({ path, content: base64, type: 'file', created: Date.now(), updated: Date.now() });
+          loadTree();
         };
-        if (file.type.startsWith('image/')) reader.readAsDataURL();
-        else reader.readAsText(file);
+        reader.readAsDataURL(file);
       };
       input.click();
     }
 
-    async function handleDrop(e, targetId) {
-      const sourceId = e.dataTransfer.getData('text/plain');
-      await db.files.update(sourceId, { parentId: targetId });
-      renderDirectory();
-    }
-
     // エディタ操作
-    async function openFile(id) {
-      currentFileId = id;
-      const file = await db.files.get(id);
-      const editor = document.getElementById('editor-text');
-      editor.value = file.content;
-      ytext.delete(0, ytext.length);
-      ytext.insert(0, file.content);
-      if (!undoManager) {
-        undoManager = new Y.UndoManager(ytext);
-      }
-      renderPreview(file.content);
+    async function openFile(path) {
+      currentPath = path;
+      const file = await db.files.get(path);
+      const editor = document.getElementById('editor');
+      editor.value = file?.content || '';
+      undoStack = [];
+      redoStack = [];
+      renderPreview();
+      hljs.highlightElement(editor);
     }
 
-    function renderPreview(content) {
-      const preview = document.getElementById('preview');
+    function renderPreview() {
+      const content = document.getElementById('editor').value;
       const html = marked.parse(content, {
         async: false,
         breaks: true,
         gfm: true,
-        sanitizer: DOMPurify.sanitize,
+        sanitizer: DOMPurify.sanitize
       });
-      preview.innerHTML = html;
-      // コードハイライト
-      preview.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-      // KaTeX数式
-      preview.querySelectorAll('span.math').forEach(el => {
-        katex.render(el.textContent, el, { throwOnError: false });
-      });
-      // Mermaidダイアグラム
-      preview.querySelectorAll('pre.mermaid').forEach(el => {
-        mermaid.render('mermaid-' + Date.now(), el.textContent, svg => {
-          el.innerHTML = svg;
-        });
-      });
-      // 画像リンク解決
-      preview.querySelectorAll('img').forEach(img => {
+      document.getElementById('preview').innerHTML = html;
+      // 画像リンクをBase64に置換
+      document.querySelectorAll('#preview img').forEach(img => {
         const src = img.getAttribute('src');
-        db.files.where('path').equals(src).first().then(file => {
-          if (file && file.type === 'image') img.src = file.content;
+        db.files.get(src).then(file => {
+          if (file?.content) img.src = file.content;
         });
       });
-    }
-
-    // 自動保存
-    let autoSaveTimeout;
-    document.getElementById('editor-text').addEventListener('input', () => {
-      clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = setTimeout(saveFile, 5000);
-      const content = document.getElementById('editor-text').value;
-      ytext.delete(0, ytext.length);
-      ytext.insert(0, content);
-      renderPreview(content);
-    });
-
-    async function saveFile() {
-      if (currentFileId) {
-        const content = document.getElementById('editor-text').value;
-        await db.files.update(currentFileId, { content });
-        console.log('Saved');
-      }
     }
 
     // バージョン管理
-    async function commitVersion() {
-      if (currentFileId) {
-        const message = prompt('Commit message:');
-        const content = document.getElementById('editor-text').value;
-        await db.versions.put({
-          id: Date.now().toString(),
-          fileId: currentFileId,
-          content,
-          timestamp: new Date(),
-          message,
-        });
-        console.log('Committed');
-      }
-    }
-
-    async function showHistory() {
-      if (currentFileId) {
-        const versions = await db.versions.where('fileId').equals(currentFileId).toArray();
-        const ul = document.createElement('ul');
-        versions.forEach(v => {
-          const li = document.createElement('li');
-          li.textContent = `${v.timestamp}: ${v.message}`;
-          li.onclick = () => {
-            document.getElementById('editor-text').value = v.content;
-            renderPreview(v.content);
-          };
-          ul.appendChild(li);
-        });
-        document.getElementById('preview').innerHTML = '';
-        document.getElementById('preview').appendChild(ul);
-      }
-    }
-
-    // Undo/Redo
     function undo() {
-      if (undoManager) undoManager.undo();
-      document.getElementById('editor-text').value = ytext.toString();
-      renderPreview(ytext.toString());
+      if (!undoStack.length) return;
+      const current = document.getElementById('editor').value;
+      redoStack.push(current);
+      document.getElementById('editor').value = undoStack.pop();
+      renderPreview();
     }
 
     function redo() {
-      if (undoManager) undoManager.redo();
-      document.getElementById('editor-text').value = ytext.toString();
-      renderPreview(ytext.toString());
+      if (!redoStack.length) return;
+      const current = document.getElementById('editor').value;
+      undoStack.push(current);
+      document.getElementById('editor').value = redoStack.pop();
+      renderPreview();
     }
 
-    // 検索/置換
-    function searchReplace() {
-      const search = prompt('Search:');
-      const replace = prompt('Replace with:');
-      if (search && replace) {
-        const editor = document.getElementById('editor-text');
-        editor.value = editor.value.replace(new RegExp(search, 'g'), replace);
-        saveFile();
-        renderPreview(editor.value);
-      }
+    // 保存
+    async function save() {
+      if (!currentPath) return;
+      const content = document.getElementById('editor').value;
+      undoStack.push(content);
+      await db.files.update(currentPath, { content, updated: Date.now() });
+      await db.versions.add({ path: currentPath, content, timestamp: Date.now() });
+      renderPreview();
     }
 
-    // テーマ切り替え
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-      db.settings.put({ key: 'theme', value: document.body.classList.contains('dark') ? 'dark' : 'light' });
+    function autoSave() {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(save, 500);
     }
 
     // エクスポート
-    async function exportZip() {
+    async function exportFolder() {
       const zip = new JSZip();
       const files = await db.files.toArray();
       files.forEach(file => {
-        if (file.type === 'file' || file.type === 'image') {
-          zip.file(file.path.replace('/root/', ''), file.content);
-        }
+        if (file.type === 'file') zip.file(file.path.slice(1), file.content);
       });
-      const content = await zip.generateAsync({ type: 'blob' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(content);
-      a.download = 'markdown-editor.zip';
-      a.click();
+      const blob = await zip.generateAsync({ type: 'blob' });
+      downloadFile(blob, 'markdown-editor.zip');
     }
 
     async function exportHtml() {
-      const content = document.getElementById('preview').innerHTML;
-      const blob = new Blob([content], { type: 'text/html' });
+      const html = document.getElementById('preview').innerHTML;
+      const blob = new Blob([html], { type: 'text/html' });
+      downloadFile(blob, 'preview.html');
+    }
+
+    async function exportSource() {
+      if (!currentPath) return;
+      const file = await db.files.get(currentPath);
+      const blob = new Blob([file.content], { type: 'text/plain' });
+      downloadFile(blob, currentPath.split('/').pop());
+    }
+
+    function downloadFile(blob, name) {
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'preview.html';
+      a.href = url;
+      a.download = name;
       a.click();
+      URL.revokeObjectURL(url);
     }
 
-    async function exportPdf() {
-      const element = document.getElementById('preview');
-      await html2pdf().from(element).save('preview.pdf');
+    // テーマ切替
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      const theme = document.body.classList.contains('light') ? 'light' : 'dark';
+      localStorage.setItem('theme', theme);
     }
 
-    // リアルタイムコラボ
-    function startCollab() {
-      const provider = new WebrtcProvider('markdown-editor-room', ydoc);
-      provider.on('sync', () => console.log('Collaborators synced'));
-      ytext.observe(() => {
-        document.getElementById('editor-text').value = ytext.toString();
-        renderPreview(ytext.toString());
+    // リサイズハンドラ
+    function setupResizer(resizerId, target, direction) {
+      const resizer = document.getElementById(resizerId);
+      resizer.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = target.offsetWidth;
+        const onMouseMove = e => {
+          const delta = e.clientX - startX;
+          target.style.width = `${startWidth + (direction === 'right' ? delta : -delta)}px`;
+        };
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          localStorage.setItem(resizerId, target.style.width);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
       });
     }
 
     // 初期化
-    async function init() {
-      await renderDirectory();
-      const theme = await db.settings.get('theme');
-      if (theme && theme.value === 'dark') document.body.classList.add('dark');
-      // Service Workerでオフライン対応
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.error('Service Worker error:', err));
-      }
-    }
-    init();
+    window.onload = async () => {
+      // テーマ復元
+      const theme = localStorage.getItem('theme') || 'dark';
+      if (theme === 'light') document.body.classList.add('light');
 
-    // ショートカット
-    document.addEventListener('keydown', e => {
-      if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        saveFile();
+      // リサイズ設定
+      setupResizer('sidebar-resizer', document.getElementById('sidebar'), 'right');
+      setupResizer('editor-resizer', document.getElementById('editor-container'), 'right');
+
+      // エディタイベント
+      const editor = document.getElementById('editor');
+      editor.addEventListener('input', () => {
+        autoSave();
+        renderPreview();
+        hljs.highlightElement(editor);
+      });
+
+      // ショートカット
+      editor.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+        if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); save(); }
+      });
+
+      // ディレクトリ読み込み
+      await loadTree();
+
+      // Service Worker登録
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(console.error);
       }
-      if (e.ctrlKey && e.key === 'z') {
-        e.preventDefault();
-        undo();
-      }
-      if (e.ctrlKey && e.key === 'y') {
-        e.preventDefault();
-        redo();
-      }
-    });
+
+      // 定期バックアップ
+      setInterval(save, 5 * 60 * 1000);
+    };
+
+    // Service Worker（オフライン対応）
+    const swCode = `
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open('markdown-editor').then(cache =>
+            cache.addAll(['./'])
+          )
+        );
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(
+          caches.match(e.request).then(response => response || fetch(e.request))
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker?.register(swUrl);
   </script>
 </body>
 </html>
