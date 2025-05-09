@@ -3,477 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Markdown Editor</title>
-  <!-- CDNライブラリ -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/markdown/markdown.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.7/dist/dexie.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/core.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/languages/javascript.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
+  <title>モダン静的サイト</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1e1e1e;
-      color: #d4d4d4;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .hero {
       height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    #app {
-      display: flex;
-      height: calc(100vh - 40px);
-    }
-    #sidebar, #editor, #preview {
-      height: 100%;
-      overflow: auto;
-    }
-    #sidebar {
-      width: 250px;
-      background: #252526;
-      padding: 10px;
-      border-right: 2px solid #3c3c3c;
-      resize: horizontal;
-    }
-    #editor {
-      flex: 1;
-      background: #1e1e1e;
-      border-right: 2px solid #3c3c3c;
-      resize: horizontal;
-    }
-    #preview {
-      flex: 1;
-      padding: 20px;
-      background: #252526;
-    }
-    #toolbar {
-      height: 40px;
-      background: #252526;
       display: flex;
       align-items: center;
-      padding: 0 10px;
-      gap: 10px;
-      border-bottom: 1px solid #3c3c3c;
+      justify-content: center;
+      background: linear-gradient(135deg, #007bff, #00ddeb);
+      color: white;
+      text-align: center;
     }
-    #sidebar ul {
-      list-style: none;
-      padding: 0;
+    .hero-content {
+      max-width: 600px;
+      padding: 20px;
     }
-    #sidebar li {
-      padding: 5px;
-      cursor: pointer;
-      border-radius: 3px;
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      animation: fadeIn 1s ease-in;
     }
-    #sidebar li:hover {
-      background: #3c3c3c;
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
     }
-    #sidebar input[type="file"] {
-      display: none;
-    }
-    #preview img {
-      max-width: 100%;
-      height: auto;
-    }
-    button, select {
-      background: #3c3c3c;
-      color: #d4d4d4;
+    .hero button {
+      background: white;
+      color: #007bff;
       border: none;
-      padding: 5px 10px;
-      border-radius: 3px;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 1rem;
       cursor: pointer;
+      transition: transform 0.3s ease;
     }
-    button:hover, select:hover {
-      background: #4e4e4e;
+    .hero button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    .codemirror {
-      height: 100%;
-    }
-    .markdown-body {
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    .dragover {
-      background: #3c3c3c;
-    }
-    #search-replace {
-      display: flex;
-      gap: 5px;
-    }
-    #search-replace input {
-      background: #3c3c3c;
-      color: #d4d4d4;
-      border: none;
-      padding: 5px;
-      border-radius: 3px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div id="toolbar">
-    <button onclick="newFile()">新規ファイル</button>
-    <button onclick="saveFile()">保存 (Ctrl+S)</button>
-    <button onclick="exportMarkdown()">MD保存</button>
-    <button onclick="exportHtml()">HTML保存</button>
-    <button onclick="exportPdf()">PDF保存</button>
-    <button onclick="exportFolder()">フォルダ保存</button>
-    <button onclick="undo()">戻す (Ctrl+Z)</button>
-    <button onclick="redo()">進む (Ctrl+Y)</button>
-    <select id="theme" onchange="changeTheme()">
-      <option value="dark">ダーク</option>
-      <option value="light">ライト</option>
-    </select>
-    <div id="search-replace">
-      <input id="search" placeholder="検索" oninput="searchText()">
-      <input id="replace" placeholder="置換">
-      <button onclick="replaceText()">置換</button>
+  <section class="hero">
+    <div class="hero-content">
+      <h1>モダンな静的サイト</h1>
+      <p>シンプルなHTMLとCSSでリッチなデザインを。</p>
+      <button>今すぐ始める</button>
     </div>
-  </div>
-  <div id="app">
-    <div id="sidebar">
-      <input type="file" id="image-upload" accept="image/*" multiple>
-      <ul id="file-list"></ul>
-    </div>
-    <div id="editor"></div>
-    <div id="preview" class="markdown-body"></div>
-  </div>
-  <script>
-    // IndexedDB設定（Dexie.js）
-    const db = new Dexie('MarkdownEditor');
-    db.version(1).stores({
-      files: 'id, name, content, path, created, updated',
-      versions: 'id++, fileId, content, timestamp',
-      images: 'id, name, data, path'
-    });
-
-    // 仮想ファイルシステム
-    let currentFile = null;
-    let files = [];
-    let versions = [];
-    let images = [];
-    let editor;
-
-    // CodeMirrorエディタ初期化
-    function initEditor() {
-      editor = CodeMirror(document.getElementById('editor'), {
-        mode: 'markdown',
-        theme: 'monokai',
-        lineNumbers: true,
-        lineWrapping: true,
-        value: '',
-        extraKeys: {
-          'Ctrl-S': saveFile,
-          'Ctrl-Z': undo,
-          'Ctrl-Y': redo
-        }
-      });
-      editor.on('change', () => {
-        renderPreview();
-        autoSave();
-      });
-    }
-
-    // プレビュー更新
-    function renderPreview() {
-      const content = editor.getValue();
-      const html = DOMPurify.sanitize(marked.parse(content, { gfm: true }));
-      document.getElementById('preview').innerHTML = html;
-      hljs.highlightAll();
-    }
-
-    // ファイルリスト更新
-    async function updateFileList() {
-      files = await db.files.toArray();
-      const fileList = document.getElementById('file-list');
-      fileList.innerHTML = '';
-      files.forEach(file => {
-        const li = document.createElement('li');
-        li.textContent = file.name;
-        li.onclick = () => openFile(file.id);
-        fileList.appendChild(li);
-      });
-    }
-
-    // 新規ファイル
-    async function newFile() {
-      const name = prompt('ファイル名を入力 (.md)', 'new.md');
-      if (!name || !name.endsWith('.md')) return;
-      const id = Date.now();
-      await db.files.put({
-        id,
-        name,
-        content: '',
-        path: `/files/${name}`,
-        created: new Date(),
-        updated: new Date()
-      });
-      await updateFileList();
-      openFile(id);
-    }
-
-    // ファイルを開く
-    async function openFile(id) {
-      currentFile = await db.files.get(id);
-      editor.setValue(currentFile.content);
-      versions = await db.versions.where('fileId').equals(id).toArray();
-      renderPreview();
-    }
-
-    // ファイル保存
-    async function saveFile() {
-      if (!currentFile) return;
-      const content = editor.getValue();
-      await db.files.update(currentFile.id, {
-        content,
-        updated: new Date()
-      });
-      await db.versions.put({
-        fileId: currentFile.id,
-        content,
-        timestamp: new Date()
-      });
-      alert('保存しました');
-    }
-
-    // 自動保存
-    let autoSaveTimeout;
-    function autoSave() {
-      clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = setTimeout(saveFile, 5000);
-    }
-
-    // 戻す/進む
-    async function undo() {
-      if (!currentFile) return;
-      const current = versions.findIndex(v => v.content === editor.getValue());
-      if (current > 0) {
-        editor.setValue(versions[current - 1].content);
-        renderPreview();
-      }
-    }
-    async function redo() {
-      if (!currentFile) return;
-      const current = versions.findIndex(v => v.content === editor.getValue());
-      if (current < versions.length - 1) {
-        editor.setValue(versions[current + 1].content);
-        renderPreview();
-      }
-    }
-
-    // 画像アップロード
-    document.getElementById('image-upload').addEventListener('change', async (e) => {
-      for (const file of e.target.files) {
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const id = Date.now();
-          await db.images.put({
-            id,
-            name: file.name,
-            data: reader.result,
-            path: `/images/${file.name}`
-          });
-          images = await db.images.toArray();
-          if (currentFile) {
-            editor.replaceSelection(`![](${`/images/${file.name}`})`);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // ドラッグ＆ドロップ
-    const sidebar = document.getElementById('sidebar');
-    sidebar.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      sidebar.classList.add('dragover');
-    });
-    sidebar.addEventListener('dragleave', () => {
-      sidebar.classList.remove('dragover');
-    });
-    sidebar.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      sidebar.classList.remove('dragover');
-      for (const file of e.dataTransfer.files) {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const id = Date.now();
-            await db.images.put({
-              id,
-              name: file.name,
-              data: reader.result,
-              path: `/images/${file.name}`
-            });
-            images = await db.images.toArray();
-            if (currentFile) {
-              editor.replaceSelection(`![](${`/images/${file.name}`})`);
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    });
-
-    // プレビューで画像表示
-    document.getElementById('preview').addEventListener('click', (e) => {
-      if (e.target.tagName === 'IMG') {
-        const src = e.target.src;
-        const image = images.find(img => img.data === src);
-        if (image) {
-          alert(`画像: ${image.name}`);
-        }
-      }
-    });
-
-    // Markdownエクスポート
-    function exportMarkdown() {
-      if (!currentFile) return;
-      const blob = new Blob([editor.getValue()], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = currentFile.name;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // HTMLエクスポート
-    function exportHtml() {
-      if (!currentFile) return;
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${currentFile.name}</title>
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
-        </head>
-        <body class="markdown-body">
-          ${DOMPurify.sanitize(marked.parse(editor.getValue(), { gfm: true }))}
-        </body>
-        </html>
-      `;
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = currentFile.name.replace('.md', '.html');
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // PDFエクスポート
-    async function exportPdf() {
-      if (!currentFile) return;
-      const element = document.getElementById('preview');
-      await html2pdf().from(element).save(currentFile.name.replace('.md', '.pdf'));
-    }
-
-    // フォルダエクスポート
-    async function exportFolder() {
-      const zip = new JSZip();
-      files.forEach(file => {
-        zip.file(`files/${file.name}`, file.content);
-      });
-      images.forEach(image => {
-        const base64 = image.data.split(',')[1];
-        zip.file(`images/${image.name}`, base64, { base64: true });
-      });
-      const content = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(content);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'markdown-editor.zip';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // テーマ切り替え
-    function changeTheme() {
-      const theme = document.getElementById('theme').value;
-      editor.setOption('theme', theme === 'dark' ? 'monokai' : 'default');
-      document.getElementById('preview').style.background = theme === 'dark' ? '#252526' : '#fff';
-      document.getElementById('preview').style.color = theme === 'dark' ? '#d4d4d4' : '#000';
-    }
-
-    // 検索置換
-    function searchText() {
-      const search = document.getElementById('search').value;
-      if (!search) {
-        editor.getAllMarks().forEach(mark => mark.clear());
-        return;
-      }
-      const cursor = editor.getSearchCursor(search);
-      editor.getAllMarks().forEach(mark => mark.clear());
-      while (cursor.findNext()) {
-        editor.markText(cursor.from(), cursor.to(), { className: 'highlight' });
-      }
-    }
-    function replaceText() {
-      const search = document.getElementById('search').value;
-      const replace = document.getElementById('replace').value;
-      if (!search || !currentFile) return;
-      const content = editor.getValue().replace(new RegExp(search, 'g'), replace);
-      editor.setValue(content);
-      renderPreview();
-    }
-
-    // Service Workerでオフライン対応
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW error:', err));
-    }
-
-    // 初期化
-    async function init() {
-      initEditor();
-      await updateFileList();
-      images = await db.images.toArray();
-      if (files.length) openFile(files[0].id);
-    }
-    init();
-  </script>
-  <!-- Service Worker（オフライン対応） -->
-  <script>
-    // 仮想Service Worker（実際には別ファイル/sw.jsが必要だが、単一ファイルのためインライン）
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => {
-          e.waitUntil(
-            caches.open('markdown-editor').then(cache => {
-              return cache.addAll([
-                '/',
-                'https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.min.js',
-                'https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.js',
-                'https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/markdown/markdown.min.js',
-                'https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.css',
-                'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
-                'https://cdn.jsdelivr.net/npm/dexie@3.2.7/dist/dexie.min.js',
-                'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
-                'https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/core.min.js',
-                'https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/languages/javascript.min.js',
-                'https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css',
-                'https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js'
-              ]);
-            })
-          );
-        });
-        self.addEventListener('fetch', e => {
-          e.respondWith(
-            caches.match(e.request).then(response => {
-              return response || fetch(e.request);
-            })
-          );
-        });
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      const url = URL.createObjectURL(blob);
-      navigator.serviceWorker.register(url).then(() => URL.revokeObjectURL(url));
-    }
-  </script>
+  </section>
 </body>
 </html>
